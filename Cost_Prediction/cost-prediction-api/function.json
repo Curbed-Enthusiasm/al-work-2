@@ -1,0 +1,30 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "route": "cost-prediction",
+      "methods": [
+        "post"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    },
+    {
+      "type": "eventHub",
+      "name": "eventOut",
+      "direction": "out",
+      "eventHubName": "%eventHubName%",
+      "connection": "eventHubConnection",
+      "cardinality": "many",
+      "consumerGroup": "$Default",
+      "dataType": "binary"
+    }
+  ]
+}

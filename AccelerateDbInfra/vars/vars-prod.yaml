@@ -1,0 +1,5 @@
+variables:
+  environmentName: 'dev'
+  dbProject: 'dbAutomationBootstrap'
+  dbServer: 'alsqldb01'
+  dbName: 'al-integratedPriceDB-prod'

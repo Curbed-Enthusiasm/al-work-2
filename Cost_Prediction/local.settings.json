@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=matchingtest;AccountKey=0xCQ34fflji6plmG5RB+BOjHrEYV0HbsG9ywA7amDivtrF2ygpAGcIR5qeQzoPcbEjeawNKY/2gq/ChhZn3F0Q==;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "LOG_LEVEL": "DEBUG",
+    "ENVIRONMENT": "Dev",
+    "eventHubConnection": "Endpoint=sb://eh-data-science-audit-log-central.servicebus.windows.net/;SharedAccessKeyName=match-grading-function;SharedAccessKey=3mGZwPTMtOdgbeDJTfg4No/CuRbQi4kBRbt/4SdL4Lg=",
+    "eventHubName": "cost-prediction-audit-dev"
+  }
+}

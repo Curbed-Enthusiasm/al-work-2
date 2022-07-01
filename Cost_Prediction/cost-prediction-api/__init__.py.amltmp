@@ -1,0 +1,113 @@
+from typing import List
+import logging
+import pandas as pd
+import numpy as np
+import json
+import pickle
+import pathlib
+import os
+from threading import Lock
+
+import azure.functions as func
+
+log_level = os.getenv('LOG_LEVEL', 'WARNING')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging._nameToLevel[log_level])
+sh = logging.StreamHandler()
+sh.setLevel(logging._nameToLevel[log_level])
+logger.addHandler(sh)
+
+accelerate_environment = os.getenv('ENVIRONMENT', 'unset')
+
+# load inference data
+logger.info('loading inference data begin')
+a2m = pd.read_csv(pathlib.Path(__file__).parent / "inference-data/airport_to_market/airport_to_market.csv", escapechar='\\')
+cpsd = pd.read_csv(pathlib.Path(__file__).parent / "inference-data/cp_sonar_data/cp_sonar_data.csv", escapechar='\\')
+lcpm = pd.read_csv(pathlib.Path(__file__).parent / "inference-data/load_cost_per_mile/load_cost_per_mile.csv", escapechar='\\')
+cd = pd.read_csv(pathlib.Path(__file__).parent / "inference-data/city_data/loc_city.csv", escapechar='\\')
+logger.info('loading inference data end')
+
+
+# setting up models for more optimized usage
+logger.info('loading models begin')
+cpmPath = pathlib.Path(__file__).parent / 'inference-data/cp_model.pkl'
+
+# Loading up the pickles 
+cpModel = pickle.load(open(cpmPath, 'rb'))
+logger.info('loading models end')
+
+def main(req: func.HttpRequest, eventOut: func.Out[str]) -> func.HttpResponse:
+    
+    common_headers = {
+        'Content-Type': 'application/json'
+    }
+
+    output = {}
+    audit_output = {}
+    correlation_id = 'notset'
+
+    try:
+
+        # parse and validate input
+        input_json = req.get_body().decode('utf8').replace("'",'"')
+        input_dict = json.loads(input_json)
+        correlation_id = req.headers['correlationId'] if 'correlationId' in req.headers else correlation_id
+        common_headers['CorrelationId'] = correlation_id
+        use_stub = True if 'stub' in req.params and req.params['stub'].lower() == 'true'.lower() else False
+        logger.debug(f"using stub {use_stub}")
+        logger.debug({"correlationId": correlation_id, "input": input_dict})
+
+        if not validate_input(input_dict):
+            logger.error({'correlationId': correlation_id, 'error': 'Bad Request', 'input': input_dict, 'stub': use_stub})
+
+            audit_output = {
+                'correlationId': correlation_id,
+                'input': input_dict,
+                'output': 'Error bad request',
+                'stub': use_stub
+            }
+            eventOut.set(json.dumps(audit_output))
+            return func.HttpResponse(json.dumps({'correlationId': correlation_id, 'error': 'Bad request', 'input': input_dict}), status_code=400, headers=common_headers)
+
+        if use_stub:
+            output = get_stub()
+        else:
+            # do real work here
+            # TODO
+            output = {'message': 'not a real response'} 
+
+        audit_output = {'correlationId': correlation_id, 'input': input_dict, 'output': output, 'stub': use_stub}
+        eventOut.set(json.dumps(audit_output))
+        return func.HttpResponse(json.dumps(output), status_code=200, headers=common_headers)
+
+    except Exception as err:
+        logger.error({'correlationId': correlation_id, 'error': err, 'input': input_dict, 'stub': use_stub})
+        msg = ''
+        if hasattr(err, 'message'):
+            msg = err.message
+        else:
+            msg = err
+        eventOut.set(json.dumps({'correlationId': correlation_id, 'error': err, 'input': input_dict, 'stub': use_stub}))
+        return func.HttpResponse(json.dumps({'correlationId': correlation_id, 'error': 'Unexpected error', 'error_detail': str(msg)}), status_code=500, headers=common_headers)
+
+def validate_input(input):
+    # sample input
+    # {
+    #     "DestinationLocationKey": "CITY_10937",
+    #     "LoadTypeCode": "V",
+    #     "LoadTypeId": 1,
+    #     "Miles": 792.013,
+    #     "OriginLocationKey": "CITY_11132",
+    #     "CorrelationId": "5907da51-ad93-4e1b-a05c-59b9fdfe5c21"
+    # }
+    # TODO validate required fields, this may not be necessary
+    return True
+
+def get_stub():
+    return {
+        'LinehaulTotal': 1872.4164,
+        'LinehaulPerMile': 1.1761,
+        'FSCTotal': 382.08,
+        'FSCPerMile': 0.24,
+        'CorrelationId': "5907da51-ad93-4e1b-a05c-59b9fdfe5c21"
+    }

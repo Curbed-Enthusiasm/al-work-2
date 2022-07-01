@@ -1,0 +1,55 @@
+pr: none
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+
+resources:
+- repo: self
+
+variables:
+- name: vmImageName
+  value: 'ubuntu-20.04'
+- name: workingDirectory
+  value: './'
+
+pool:
+  vmImage: $(vmImageName)
+
+stages:
+- stage: Build
+  displayName: Build stage
+
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    - bash: |
+        pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
+        ls $(Build.SourcesDirectory)/cost-prediction-api
+      workingDirectory: $(workingDirectory)
+      displayName: 'Install application dependencies'
+
+    - bash: |
+        pip install pandas
+      displayName: 'Install pandas'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      condition: succeeded()
+      inputs:
+        rootFolderOrFile: '$(workingDirectory)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'

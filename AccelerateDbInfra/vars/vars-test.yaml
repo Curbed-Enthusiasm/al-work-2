@@ -1,0 +1,5 @@
+variables:
+  environmentName: 'test'
+  dbProject: 'dbAutomationBootstrap'
+  dbServer: 'alsqldb01'
+  dbName: 'al-integratedPriceDB-test'

@@ -1,0 +1,5 @@
+variables:
+  environmentName: 'stg'
+  dbProject: 'dbAutomationBootstrap'
+  dbServer: 'alsqldb01'
+  dbName: 'al-integratedPriceDB-stg'

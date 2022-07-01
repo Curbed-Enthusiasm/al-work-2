@@ -1,0 +1,39 @@
+trigger: none
+
+variables:
+  vmImageName: 'ubuntu-latest'
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Accelerate/pipeline-templates       
+
+jobs:  
+- job: Validate_and_Plan
+  pool:
+    vmImage: $(vmImageName)
+  steps:
+  - template: infra-pipeline-setup.yaml@templates
+    parameters:
+      dir: 'terragrunt'
+      sshFile: 'az_key'
+      knownHostsEntry: 'vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H'
+  - script: |
+      ./terragrunt run-all validate
+    displayName: Terragrunt Validate
+    workingDirectory: 'terragrunt'
+    env:
+      ARM_CLIENT_ID: $(AZURE_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(AZURE_TENANT_ID)
+  - script: |
+      ./terragrunt run-all plan
+    displayName: Terragrunt Plan
+    workingDirectory: 'terragrunt'
+    env:
+      ARM_CLIENT_ID: $(AZURE_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(AZURE_TENANT_ID)

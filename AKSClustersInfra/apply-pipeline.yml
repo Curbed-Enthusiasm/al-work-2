@@ -1,0 +1,33 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - .gitignore
+    - pull-request-pipeline.yml
+    - config
+    - onboard
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Accelerate/pipeline-templates
+
+pool:
+  vmImage: "ubuntu-latest"
+
+stages:
+- stage: "resource_group_nonprod"
+  jobs:
+  - template: terraform-apply-manual-approve.yaml@templates
+    parameters:
+      env: resource-group-nonprod
+- stage: "aks_cluster_nonprod"
+  jobs:
+  - template: terraform-apply-manual-approve.yaml@templates
+    parameters:
+      env: aks-cluster-nonprod

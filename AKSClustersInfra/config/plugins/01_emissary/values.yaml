@@ -1,0 +1,14 @@
+autoscaling:
+  enabled: true
+
+#image:
+#  repository: docker.io/emissaryingress/emissary
+#  tag: 2.2.2
+podAnnotations:
+  config.linkerd.io/skip-inbound-ports: 80,443,8080,8443
+  linkerd.io/inject: ingress
+service:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-disable-health-probe-for-port-names: http
+#nodeSelector:
+#  type: admin

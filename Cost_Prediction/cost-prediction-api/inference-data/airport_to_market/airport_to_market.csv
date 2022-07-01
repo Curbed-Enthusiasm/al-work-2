@@ -1,0 +1,151 @@
+MARKETAREAID,CENTROIDCITY,CENTROIDSTATE,AIRPORTCODE
+NY_BRN,Brooklyn,NY,JFK
+MA_SPR,Springfield,MA,SPR
+MA_BOS,Boston,MA,BOS
+NH_BRI,Bristol,NH,BNH
+ME_AUG,Augusta,ME,AUG
+NY_ALB,Albany,NY,ALB
+CT_HAR,Hartford,CT,BDL
+NJ_ELI,Elizabeth,NJ,EWR
+PA_PHI,Philadelphia,PA,PHL
+NY_SYR,Syracuse,NY,SYR
+NY_ELM,Elmira,NY,ELM
+NY_BUF,Buffalo,NY,BUF
+PA_PIT,Pittsburgh,PA,PIT
+PA_ERI,Erie,PA,ERI
+PA_HAR,Harrisburg,PA,MDT
+PA_ALL,Allentown,PA,ABE
+MD_BAL,Baltimore,MD,BWI
+VA_ALE,Alexandria,VA,DCA
+VA_ROA,Roanoke,VA,ROA
+NC_GRE,Greensboro,NC,GSO
+NC_RAL,Raleigh,NC,RDU
+VA_WIN,Winchester,VA,WGO
+VA_NOR,Norfolk,VA,ORF
+NC_CHA,Charlotte,NC,CLT
+SC_GRE,Greenville,SC,GSP
+GA_SAV,Savannah,GA,SAV
+GA_TIF,Tifton,GA,TMA
+AL_MON,Montgomery,AL,MGM
+FL_JAX,Jacksonville,FL,JAX
+FL_TAL,Tallahassee,FL,THL
+AL_MOB,Mobile,AL,MOB
+FL_LAK,Lakeland,FL,LAL
+AL_DEC,Decatur,AL,DCU
+OH_TOL,Toledo,OH,TOL
+OH_CLE,Cleveland,OH,CLE
+IA_DES,Des Moines,IA,DSM
+ND_FAR,Fargo,ND,FAR
+ND_BIS,Bismarck,ND,BIS
+IL_RFD,Rockford,IL,RFD
+NE_NPL,North Platte,NE,LBF
+LA_SHR,Shreveport,LA,SHV
+TX_LUB,Lubbock,TX,LBB
+WY_GRE,Green River,WY,GVW
+TN_MEM,Memphis,TN,MEM
+KY_LEX,Lexington,KY,LEX
+OH_CIN,Cincinnati,OH,CVG
+MI_RAP,Grand Rapids,MI,GRR
+MN_DUL,Duluth,MN,DLH
+SD_SXF,Sioux Falls,SD,FSD
+WI_MAD,Madison,WI,MSN
+MO_JOP,Joplin,MO,JLN
+MO_JEF,Jefferson City,MO,JEF
+LA_NEW,New Orleans,LA,MSY
+AR_LIT,Little Rock,AR,LIT
+CA_STK,Stockton,CA,SCK
+NF_STJ,Saint Johns,NF,NULL
+ON_OTT,Ottawa,ON,NULL
+BC_PRI,Prince George,BC,NULL
+NY_ROC,Rochester,NY,ROC
+VA_RCH,Richmond,VA,RIC
+TN_KNO,Knoxville,TN,TYS
+WV_CHA,Charleston,WV,CRW
+WV_HUN,Huntington,WV,HTS
+NC_WIL,Wilmington,NC,ILM
+TN_CHA,Chattanooga,TN,CHA
+SC_COL,Columbia,SC,CAE
+SC_CHA,N Charleston,SC,CHS
+GA_ATL,Atlanta,GA,ATL
+GA_MAC,Macon,GA,MCN
+AL_BIR,Birmingham,AL,BHM
+TN_NAS,Nashville,TN,BNA
+KY_LOU,Louisville,KY,SDF
+MO_GIR,Cape Girardeau,MO,CGI
+KY_BOW,Bowling Green,KY,BWG
+IN_EVA,Evansville,IN,EVV
+IN_IND,Indianapolis,IN,IND
+IN_GRY,Gary,IN,GYY
+IN_SBD,South Bend,IN,SBN
+MI_SAG,Saginaw,MI,MBS
+IL_ROC,Rock Island,IL,MLI
+WI_GRE,Green Bay,WI,GRB
+MN_STC,Saint Cloud,MN,STC
+SD_RAP,Rapid City,SD,RAP
+MT_BIL,Billings,MT,BIL
+IL_QUI,Quincy,IL,UIN
+IL_TAY,Taylorville,IL,TAZ
+KS_HUT,Hutchinson,KS,HUT
+TX_AMA,Amarillo,TX,AMA
+FL_MIA,Miami,FL,MIA
+OH_COL,Columbus,OH,CMH
+IN_FTW,Ft Wayne,IN,FWA
+NE_OMA,Omaha,NE,OMA
+MN_MIN,Minneapolis,MN,MSP
+IL_JOL,Joliet,IL,JOT
+IL_BLO,Bloomington,IL,BMI
+MO_STL,Saint Louis,MO,STL
+MO_KAN,Kansas City,MO,MCI
+OK_OKC,Oklahoma City,OK,OKC
+TX_AUS,Austin,TX,AUS
+OK_TUL,Tulsa,OK,TUL
+TX_LAR,Laredo,TX,LRD
+TX_TEX,Texarkana,TX,TXK
+ID_TWI,Twin Falls,ID,TWF
+AZ_PHO,Phoenix,AZ,PHX
+AZ_FLA,Flagstaff,AZ,FLG
+AZ_TUC,Tucson,AZ,TUS
+NV_REN,Reno,NV,RNO
+CA_ONT,Ontario,CA,ONT
+CA_SFR,San Francisco,CA,SFO
+WA_SEA,Seattle,WA,SEA
+NS_HAL,Halifax,NS,NULL
+PQ_QUE,Quebec,PQ,NULL
+ON_TOR,Toronto,ON,NULL
+BC_VAN,Vancouver,BC,NULL
+MS_JAC,Jackson,MS,JAN
+IA_CED,Cedar Rapids,IA,CID
+AR_FAY,Fayetteville,AR,XNA
+TX_ELP,El Paso,TX,ELP
+KY_LEX,Lexington,KY,NULL
+IN_TER,Terre Haute,IN,HUF
+MI_DET,Detroit,MI,DTW
+IA_DUB,Dubuque,IA,DBQ
+WI_MIL,Milwaukee,WI,MKE
+TX_DAL,Dallas,TX,DAL
+TX_FTW,Ft Worth,TX,FTW
+TX_HOU,Houston,TX,HOU
+TX_ANT,San Antonio,TX,SAT
+TX_MCA,McAllen,TX,MFE
+NM_ALB,Albuquerque,NM,ABQ
+WI_EAU,Eau Claire,WI,EAU
+MT_MIS,Missoula,MT,MSO
+CO_DEN,Denver,CO,DEN
+CO_GRA,Grand Jct,CO,GJT
+WA_SPO,Spokane,WA,GEG
+UT_SLC,Salt Lake City,UT,SLC
+NV_VEG,Las Vegas,NV,LAS
+CA_LAX,Los Angeles,CA,LAX
+CA_SDI,San Diego,CA,SAN
+CA_FRS,Fresno,CA,FAT
+OR_POR,Portland,OR,PDX
+NB_MON,Moncton,NB,NULL
+PQ_MON,Montreal,PQ,NULL
+ON_SUD,Sudbury,ON,NULL
+MB_WIN,Winnipeg,MB,NULL
+SK_REG,Regina,SK,NULL
+AB_CAL,Calgary,AB,NULL
+ON_LON,London,ON,NULL
+IL_CHI,Chicago,IL,CHI
+OR_MED,Medford,OR,MFR
+OR_PEN,Pendleton,OR,PDT
