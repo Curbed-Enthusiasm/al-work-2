@@ -1,0 +1,227 @@
+# Python Function App to Linux on Azure
+# Build a Python function app and deploy it to Azure as a Linux function app.
+# still need some testing steps probs
+schedules:
+- cron: "05 11 * * *"
+  displayName: Daily 6am build
+  branches:
+    include:
+    - release/3.5
+  always: true
+# these need to be set or the trigger WILL NOT RUN
+pr: none
+trigger: none
+
+resources:
+- repo: self
+pool:
+  vmImage: $(vmImageName)
+
+variables:
+- group: truck-match-dev
+  # Azure Resource Manager connection created during pipeline creation
+- name: devSubscription 
+  value: 'data-science-dev' # move to various libraries eventually
+  # Azure Blob Storage Container name
+- name: containername
+  value: 'inference-data'
+  # Agent VM image name
+- name: vmImageName
+  value: 'ubuntu-latest'
+  # Working Directory
+- name: workingDirectory
+  value: 'tmv3'
+
+stages:
+
+# separate out via conditional to check for file changes to kick off TF section vs Function section
+- stage: TfDeploy
+  jobs:
+  - job: CheckChanges
+    displayName: 'Check changes' # script to check file and spits out a var to check against for following job
+    steps:
+      - bash: |
+          PATH_FILTER="terragrunt/"
+          CHANGED_FILES=$(git diff HEAD HEAD~ --name-only)
+          MATCH_COUNT=0
+
+          echo "Checking for file changes..."
+          for FILE in $CHANGED_FILES
+          do
+            if [[ $FILE == *$PATH_FILTER* ]]; then
+              echo "MATCH:  ${FILE} changed"
+              MATCH_COUNT=$(($MATCH_COUNT+1))
+            else
+              echo "IGNORE: ${FILE} changed"
+            fi
+          done
+
+          echo "$MATCH_COUNT match(es) for filter '$PATH_FILTER' found."
+          if [[ $MATCH_COUNT -gt 0 ]]; then
+            echo "##vso[task.setvariable variable=SOURCE_CODE_CHANGED;isOutput=true]true"
+          else
+            echo "##vso[task.setvariable variable=SOURCE_CODE_CHANGED;isOutput=true]false"
+          fi
+        name: check_changes
+        displayName: 'Check changed files'
+
+  - job: tfBuild
+    displayName: runTF
+    dependsOn: CheckChanges # <- Important: Mark previous job as dependency        
+    condition: eq(dependencies.CheckChanges.outputs['check_changes.SOURCE_CODE_CHANGED'], 'true')
+    pool:
+      vmImage: $(vmImageName)
+# fixed the following step by: creating ssh key, adding that key to both the library and my keys which have access to the right repos (this will need to be fixed at some point), and by adding the pub key section
+    steps:
+    - task: InstallSSHKey@0
+      inputs:
+        knownHostsEntry: 'vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H'
+        sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC087b1MZJAioTd0C9Feti5r7J5FAps0YV8rO7cGg0EdUzrWnRfO46b8B6D8X+P6WxKAi0oxIGgp1Ygo2la97ZdhN/tFAbg1XWznYwK5FYvmLh9JFZFSimKoDaOfcyLe6JAgSPFA12tJsIcMletVpDI5JHFLsTm1C6UPcAsCMNLsDPE+RjwqKWB9JxFxaE4Up3hd0GFaA18VJrH0dsPQ9X+6H/3BfXYmHGcs8c+W5o/8uQRhgyn+4f/52fESIN7RCNAlOMz7H/NUcR0bMLl0drPCY0eGYet/+HCxYgBHKq7pVwwCNNsWQZ9Sqe6AhBrBH4HMW4IdqQlToo/DpnI+n2IZ3iB4HGCz+vQPsatTZuwCVoyU52m+Lp+8I2e+SpWqzWItjKfJs9MKVz2zBKLiriGQFKM8tAYfCpMNZYScGQvq2qZuZZhBSP1wlhxB+9FcCX31mIVyywSaX662ou2lu7CYKmcnxuu7HeJFArIUzVNpIpoEkPnkHsZO7owcQBoV+YungQKWQrOThcssqblStIA9A3Nn9tgP4hGmB9HR6mszE1nz+wQ46gXp4rviJMITBw+cDM/O5V9aqJM6zELcbttCx4RLHrlBWIwwNY7wVSzhZm0Be9uWj5w2ltkTtY5SUOXp0HgU2dazgbH3+aXvQIPvEQgQX1r6A5ZV86u2JYKuw=='
+        sshKeySecureFile: 'az_key'
+    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+      displayName: 'Install Terraform 0.15.3'
+      inputs:
+        terraformVersion: 0.15.3
+    - script: |
+        pwd && ls
+        wget -O terragrunt -nv https://github.com/gruntwork-io/terragrunt/releases/download/v0.29.10/terragrunt_linux_amd64
+        chmod +x terragrunt
+      displayName: 'Install terragrunt  0.29.10'
+      workingDirectory: 'terragrunt'
+    - script: |
+        ./terragrunt run-all plan --terragrunt-non-interactive
+      workingDirectory: 'terragrunt'
+      env:
+        SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+        CLIENT_ID: $(CLIENT_ID)
+        TENANT_ID: $(TENANT_ID)
+        CLIENT_SECRET: $(CLIENT_SECRET)
+
+- stage: Build
+  displayName: Build stage
+
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+
+    steps:
+    - bash: |
+        if [ -f extensions.csproj ]
+        then
+            dotnet build extensions.csproj --runtime ubuntu.16.04-x64 --output ./bin
+        fi
+      workingDirectory: $(workingDirectory)
+      displayName: 'Build extensions'
+
+    # - bash: 'pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt'
+    #   workingDirectory: tmv3
+    #   displayName: 'Install Application Dependencies'
+    # - task: UsePythonVersion@0
+    #   displayName: 'Use Python 3.8'
+    #   inputs:
+    #     versionSpec: 3.8 
+
+    - task: AzureCLI@2
+      displayName: 'Gather Staged Data '
+      inputs:
+        azureSubscription: $(devSubscription)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: | # mkdir $(Build.SourcesDirectory)\tmv3\TruckGrading\inference-data
+         rm -r $(workingDirectory)/TruckGrading/inference-data/*/
+         az storage blob download-batch --account-name $(accountName) --source inference-data --destination $(workingDirectory)/TruckGrading/inference-data --auth-mode key --account-key $(accountKey)
+         ls $(workingDirectory)
+        #workingDirectory: tmv3
+    
+    - bash: |
+        pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
+        ls $(Build.SourcesDirectory)/tmv3
+      workingDirectory: $(workingDirectory)
+      displayName: 'Install application dependencies'
+
+    - bash: |
+        pip install pandas
+      #workingDirectory: $(workingDirectory)
+      displayName: 'Install pandas'
+
+    - task: PythonScript@0
+      inputs:
+        scriptSource: 'filePath' # Options: filePath, inline
+        scriptPath: $(Build.SourcesDirectory)/tmv3/TruckGrading/testdata/fileCheck.py # Required when scriptSource == filePath
+        #script: # Required when scriptSource == inline
+        #arguments: # Optional
+        #pythonInterpreter: # Optional
+        #workingDirectory: $(Build.SourcesDirectory)
+        #failOnStderr: false # Optional
+    - bash: python $(Build.SourcesDirectory)/tmv3/TruckGrading/testdata/fileCheck.py
+    - script: python $(Build.SourcesDirectory)/tmv3/TruckGrading/testdata/fileCheck.py
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      condition: succeeded()
+      inputs:
+        rootFolderOrFile: '$(workingDirectory)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    #- publish: $(System.ArtifactsDirectory)/$(Build.BuildId).zip
+    #  artifact: drop
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+
+# OLD DEPLOYMENT STEPS HERE still isn't working
+
+# - stage: Deploy
+#   displayName: Deploy function
+#   dependsOn: Build
+#   condition: succeeded()
+
+#   jobs:
+#   - deployment: Deploy
+#     displayName: Deploying
+#     pool:
+#       vmImage: $(vmImageName)
+
+#     strategy:
+#       runOnce:
+#         deploy:
+
+#           steps:
+#           - task: AzureFunctionApp@1
+#             displayName: 'Azure functions app deploy'
+#             inputs:
+#               azureSubscription: 'data-science-dev'
+#               appType: 'functionAppLinux'
+#               appName: 'truck-match-dev3'
+#               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+
+# - stage: Deploy
+#   displayName: Deploy function
+#   dependsOn: Build
+#   condition: succeeded()
+
+#   jobs:
+#   - job: Deploy
+#     displayName: Deploying
+    
+#     pool:
+#       vmImage: $(vmImageName)
+    
+#       strategy:
+#         runOnce:
+#           deploy:
+
+#             steps:
+#             - task: AzureFunctionApp@1
+#               displayName: 'Azure functions app deploy'
+#               inputs:
+#                 azureSubscription: '$(devSubscription)'
+#                 appType: functionAppLinux
+#                 appName: 'truck-match-dev3'
+#                 package: '$(Build.ArtifactStagingDirectory)/drop/$(Build.BuildId).zip'
