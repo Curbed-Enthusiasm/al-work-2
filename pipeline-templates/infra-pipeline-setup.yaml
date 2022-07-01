@@ -1,0 +1,20 @@
+parameters:
+- name: dir
+  type: string
+- name: sshFile
+  type: string
+  default: ''
+- name: knownHostsEntry
+  type: string
+  default: ''
+
+steps:
+- template: steps/install-ssh-key.yaml
+  parameters:
+    sshFile: ${{ parameters.sshFile }}
+    knownHostsEntry: ${{ parameters.knownHostsEntry }}
+- template: steps/install-tf.yaml
+- template: steps/install-tg.yaml
+  parameters: 
+    dir: ${{ parameters.dir }}
+- template: steps/prep-az-creds-for-tf.yaml

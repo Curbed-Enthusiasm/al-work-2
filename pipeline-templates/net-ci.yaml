@@ -1,0 +1,89 @@
+parameters:
+- name: vmImage
+  default: 'ubuntu-latest'
+  type: string
+- name: dotnetVersion
+  default: '5.0.x'
+  type: string
+- name: buildConfiguration
+  default: 'release'
+  type: string
+- name: projectName
+  type: string
+- name: projectKeySonar
+  type: string
+- name: coverletSettingsFile
+  type: string
+  default: ''
+
+stages:
+- stage: CI
+  jobs:
+  - job: Validate
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: ${{ parameters.dotnetVersion }}
+        
+    - task: SonarQubePrepare@4
+      displayName: Prepare SonarQube
+      inputs:
+        SonarQube: 'sonarqube'
+        scannerMode: 'MSBuild'
+        configMode: manual
+        projectKey: ${{ parameters.projectKeySonar }}
+        projectName: ${{ parameters.projectName }}
+        extraProperties: |         
+          sonar.cs.opencover.reportsPaths="$(Agent.TempDirectory)/**/coverage.opencover.xml"
+
+    - task: DotNetCoreCLI@2
+      displayName: Nuget restore 
+      inputs:
+        command: 'restore'
+        projects: '**/*.sln'
+        includeNuGetOrg: true
+        feedsToUse: 'select'
+        vstsFeed: 'ArriveCommons'
+
+    - task: DotNetCoreCLI@2
+      displayName: Dotnet Build
+      inputs:
+        command: 'build'
+        projects: '**/*.sln'
+        arguments: '--no-restore'
+
+    # For coverage to be generated, project must add coverlet.collector as a dependency to their test project(s).
+    # Output location, format, etc for coverage reports can be customized by setting the CoverletSettings parameter,
+    # as specified by the docs linked below. Custom settings MUST still output coverage file to default location in
+    # BOTH opencover & cobertura formats. OpenCover is required for Sonarqube, Cobertura is required for Azure DevOps Pipelines.
+    # https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/VSTestIntegration.md#coverlet-options-supported-by-vstest-integration
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Tests'
+      inputs:
+        command: 'test'
+        publishTestResults: true
+        ${{ if eq(parameters.coverletSettingsFile, '') }}:
+          arguments: '--configuration ${{ parameters.buildConfiguration }} --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover,cobertura'
+        ${{ else }}:
+          arguments: '--configuration ${{ parameters.buildConfiguration }} --collect:"XPlat Code Coverage" --settings ${{ parameters.coverletSettingsFile }}'
+        nobuild: true
+      condition: succeededOrFailed()
+
+    # Publish code coverage results so they are visible from/attached to the pipeline run as well.
+    # Assumes default format/file name for generated coverage file.
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+        failIfCoverageEmpty: true
+    
+    - task: SonarQubeAnalyze@4
+      displayName: SonarQube Analyze
+      
+    - task: SonarQubePublish@4
+      displayName: SonarQube Publish    
+      inputs:
+        pollingTimeoutSec: '300'     

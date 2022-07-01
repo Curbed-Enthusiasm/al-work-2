@@ -1,0 +1,105 @@
+# Runs a TF Validate -> Plan -> Manual Approval -> Apply pipeline for the designated environment.
+# Assumes repo's folder structure matches standard IaC repo structure: /terragrunt at root level, /terragrunt/${env} folders for each environment
+
+parameters:
+- name: env
+  type: string
+- name: sshFile
+  type: string
+  default: ''
+- name: knownHostsEntry
+  type: string
+  default: ''
+
+jobs:
+- job: validate
+  steps:
+  - template: infra-pipeline-setup.yaml
+    parameters:
+      dir: 'terragrunt/${{ parameters.env }}'
+      sshFile: ${{ parameters.sshFile }}
+      knownHostsEntry: ${{ parameters.knownHostsEntry }}
+  - script: |
+      ./terragrunt validate
+    displayName: Terragrunt Validate
+    workingDirectory: 'terragrunt/${{ parameters.env }}'
+    env:
+      ARM_CLIENT_ID: $(AZURE_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(AZURE_TENANT_ID)
+
+- job: plan
+  dependsOn: validate
+  condition: succeeded()
+  steps:
+  - template: infra-pipeline-setup.yaml
+    parameters:
+      dir: 'terragrunt/${{ parameters.env }}'
+      sshFile: ${{ parameters.sshFile }}
+      knownHostsEntry: ${{ parameters.knownHostsEntry }}
+  # set variable based on https://www.terraform.io/cli/commands/plan#detailed-exitcode to decide if approval & apply can be skipped or not
+  # if -detailed-exitcode is a "1", that means failure. Exit with 1 so that step shows as failed. Else capture "2" as "true" in output variable,
+  # indicating plan succeeded and contains changes. Capture "0" as "false", indicating plan succeeded and has no changes (so we can skip the approval job)
+  - script: |
+      ./terragrunt plan -out='tfplan.${{ parameters.env }}' -detailed-exitcode
+      plan_exit_code=$?
+
+      if [[ $plan_exit_code -eq 1 ]]
+      then
+        exit 1
+      fi
+
+      echo "##vso[task.setvariable variable=TF_PLAN_HAS_CHANGES;isoutput=true]$([[ $plan_exit_code -eq 2 ]] && echo 'true' || echo 'false')"
+    displayName: Terragrunt Plan
+    name: plan
+    workingDirectory: 'terragrunt/${{ parameters.env }}'
+    env:
+      ARM_CLIENT_ID: $(AZURE_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(AZURE_TENANT_ID)
+  # output plan file as artifact and for use in apply
+  - publish: $(System.DefaultWorkingDirectory)/terragrunt/${{ parameters.env }}/tfplan.${{ parameters.env }}
+    artifact: '${{ parameters.env }}plan'
+
+# wait for manual approval before apply if there are changes
+- job: approve
+  displayName: Review Terraform Plan
+  dependsOn: plan
+  condition: and(succeeded(), eq(dependencies.plan.outputs['plan.TF_PLAN_HAS_CHANGES'], 'true'))
+  pool: server    
+  timeoutInMinutes: 4320 # job times out in 3 days
+  steps:   
+  - task: ManualValidation@0
+    timeoutInMinutes: 1440 # task times out in 1 day
+    inputs:
+      # TODO - tweak users - long term this should be the owning app team's email distro. Ideally would be able to integrate with slack but doesn't seem to be an option out of the box today.
+      notifyUsers: |
+        controlled-chaos@arrivelogistics.com
+      instructions: 'Review Terraform Plan'
+      onTimeout: 'reject'
+
+- job: apply
+  dependsOn:
+  - plan
+  - approve
+  # only run job if plan has changes based on detailed exitcode
+  condition: and(succeeded(), eq(dependencies.plan.outputs['plan.TF_PLAN_HAS_CHANGES'], 'true'))
+  steps:
+  - template: infra-pipeline-setup.yaml
+    parameters:
+      dir: 'terragrunt/${{ parameters.env }}'
+      sshFile: ${{ parameters.sshFile }}
+      knownHostsEntry: ${{ parameters.knownHostsEntry }}
+  - download: current
+    artifact: '${{ parameters.env }}plan'
+  - script: ls -Rlh $(Pipeline.Workspace)
+  - script: ./terragrunt apply -auto-approve $(Pipeline.Workspace)/${{ parameters.env }}plan/tfplan.${{ parameters.env }}
+    displayName: Terragrunt Apply
+    workingDirectory: 'terragrunt/${{ parameters.env }}'
+    env:
+      ARM_CLIENT_ID: $(AZURE_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(AZURE_TENANT_ID)

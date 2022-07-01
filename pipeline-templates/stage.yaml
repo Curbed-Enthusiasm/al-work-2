@@ -1,0 +1,25 @@
+parameters:
+- name: 'text'
+  default: 'Hello Wolrd'
+  type: string
+- name: 'envName'
+  default: 'Test'
+  type: string
+- name: condition
+  default: ''
+  type: string
+
+stages:
+- stage: ${{ parameters.envName }}
+  condition: ${{ parameters.condition }}
+  jobs:
+  - deployment: ${{ parameters.envName }}
+    environment: ${{ parameters.envName }}
+    displayName: ${{ parameters.envName }}
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo ${{ parameters.text }}

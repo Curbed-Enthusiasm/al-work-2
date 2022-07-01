@@ -1,0 +1,44 @@
+parameters:
+- name: environmentName
+  type: string
+- name: dbProject
+  type: string
+- name: dbServer
+  type: string
+- name: dbName
+  type: string
+
+jobs:
+- job: download_artis
+  steps:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      source: specific
+      pipeline: 690
+      project: ${{ parameters.dbProject  }}
+      runVersion: 'latest'
+      path: $(Build.SourcesDirectory)
+  - task: SqlAzureDacpacDeployment@1
+    displayName: Execute Azure SQL | DacpacTask
+    inputs:
+      azureSubscription: 'Arrive Corporate (2391022b-04f5-42a5-838d-1c0a301df4c8)'
+      authenticationType: 'servicePrincipal'
+      ServerName: ${{ parameters.dbServer }}
+      DatabaseName:  ${{ parameters.dbName }}
+      deployType: 'DacpacTask'
+      deploymentAction: 'publish'
+      DacpacFile: '$(Build.SourcesDirectory)\stgProdDbPackage\dbAutomation.dacpac'
+      IpDetectionMethon: AutoDetect
+    condition: or(startsWith('${{parameters.environmentName}}', 'stg'), startsWith('${{parameters.environmentName}}', 'prod'))
+  - task: SqlAzureDacpacDeployment@1
+    displayName: Execute Azure SQL | DacpacTask
+    inputs:
+      azureSubscription: 'Arrive Corporate (2391022b-04f5-42a5-838d-1c0a301df4c8)'
+      authenticationType: 'servicePrincipal'
+      ServerName: ${{ parameters.dbServer }}
+      DatabaseName:  ${{ parameters.dbName }}
+      deployType: 'DacpacTask'
+      deploymentAction: 'publish'
+      DacpacFile: '$(Build.SourcesDirectory)\devsDbPackage\devsAutomatedDb.dacpac'
+      IpDetectionMethon: AutoDetect
+    condition: or(startsWith('${{parameters.environmentName}}', 'dev'), startsWith('${{parameters.environmentName}}', 'test'))

@@ -1,0 +1,83 @@
+parameters:
+- name: 'envName'
+  default: 'Test'
+  type: string
+- name: vmImage
+  default: 'windows-2019'
+  type: string
+- name: keyVault
+  default: 'Al-Key-Vault-DEV-SC-US'
+  type: string
+- name: projectName
+  type: string
+- name: assemblyProduct
+  type: string
+  
+
+stages:
+- stage: Build
+  jobs:
+  - deployment: Build
+    environment: ${{ parameters.envName }}
+    displayName: Build
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+      demands:
+      - msbuild
+      - visualstudio
+      - vstest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureKeyVault@1
+            displayName: 'Azure Key Vault: Al-Key-Vault-DEV-SC-US'
+            inputs:
+              azureSubscription: 'Arrive Corporate (2391022b-04f5-42a5-838d-1c0a301df4c8)'
+              KeyVaultName: ${{ parameters.keyVault }}
+
+          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+            displayName: 'Replace tokens in **/app.config'
+            inputs:
+              rootDirectory: 'Source/${{ parameters.projectName }}.UnitTest'
+              targetFiles: '**/app.config'
+
+          - task: sebastianlux.UpdateAssemblyInfo.UpdateAssemblyInfo-task.Update AssemblyInfo@1
+            displayName: 'Update SharedAssemblyInfo.cs file'
+            inputs:
+              filePattern: SharedAssemblyInfo.cs
+              assemblyProduct: ${{ parameters.assemblyProduct}}
+              assemblyDescription: '$(Build.BuildNumber)'
+              assemblyCopyright: 'Copyright © 2019'
+              assemblyCompany: 'Arrive Logistics Inc'
+              assemblyConfiguration: '$(BuildConfiguration)'
+
+          - task: VSBuild@1
+            displayName: 'Build solution'
+            inputs:
+              solution: '$(Parameters.solution)'
+              vsVersion: 15.0
+              msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+              platform: '$(BuildPlatform)'
+              configuration: '$(BuildConfiguration)'
+
+          - task: VSTest@2
+            displayName: 'Test Assemblies'
+            inputs:
+              testAssemblyVer2: |
+                **\*test*.dll
+                !**\*core.unittest*.dll
+                !**\*TestAdapter.dll
+                !**\obj\**
+                pathtoCustomTestAdapters: '$(Build.SourcesDirectory)\Source\packages'
+                runInParallel: false
+                codeCoverageEnabled: false
+                publishRunAttachments: false
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact:'
+            inputs:
+              PathtoPublish: '$(build.artifactstagingdirectory)'
+              ArtifactName: '$(BuildConfiguration)'
+            condition: succeededOrFailed()
+

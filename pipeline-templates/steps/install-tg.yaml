@@ -1,0 +1,10 @@
+parameters:
+- name: dir
+  type: string
+
+steps:
+- script: |
+    wget -O terragrunt -nv https://github.com/gruntwork-io/terragrunt/releases/download/v0.29.10/terragrunt_linux_amd64 &&
+    chmod +x terragrunt
+  displayName: 'Install terragrunt  0.29.10'
+  workingDirectory: ${{ parameters.dir }}

@@ -1,0 +1,96 @@
+parameters:
+- name: 'envName'
+  default: 'Test'
+  type: string
+- name: vmImage
+  default: 'ubuntu-latest'
+  type: string
+- name: projectName
+  type: string
+- name: dockerRegistry
+  default: arrivelogistics
+  type: string
+- name: dockerRepository
+  type: string
+- name: projectKeySonar
+  type: string
+
+stages:
+- stage: Build
+  jobs:
+  - deployment: Build
+    environment: ${{ parameters.envName }}
+    displayName: Build
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: NodeTool@0
+            displayName: 'Use Node 14.3.0'
+            inputs:
+              versionSpec: 14.3.0
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-installer-task.YarnInstaller@2
+            displayName: 'Use Yarn 1.22.0'
+            inputs:
+              versionSpec: 1.22.0
+          - task: Cache@2
+            displayName: 'Yarn Cache'
+            inputs:
+              key: '"developyarn" | "$(Agent.OS)" | package.json'
+              path: 'node_modules'
+              cacheHitVar: CacheRestored
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+            displayName: 'Yarn '
+            inputs:
+              customRegistry: useFeed
+              customFeed: '86c6feb8-b7f2-48b9-9179-40fffa0db4c8'
+            condition: ne(variables['CacheRestored'], 'true')
+          - task: SonarSource.sonarqube.15B84CA1-B62F-4A2A-A403-89B77A063157.SonarQubePrepare@4
+            displayName: 'Prepare analysis on SonarQube'
+            inputs:
+              SonarQube: Sonar
+              scannerMode: CLI
+              configMode: manual
+              cliProjectKey: ${{ parameters.projectKeySonar }}
+              cliProjectName: ${{ parameters.projectName }}
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+            displayName: 'Yarn  ESLint'
+            inputs:
+              ProjectDirectory: src
+              Arguments: 'lint:js'
+              customRegistry: useFeed
+              customFeed: '86c6feb8-b7f2-48b9-9179-40fffa0db4c8'
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+            displayName: 'Yarn SCSSLint'
+            inputs:
+              ProjectDirectory: src
+              Arguments: 'lint:scss'
+              customRegistry: useFeed
+              customFeed: '86c6feb8-b7f2-48b9-9179-40fffa0db4c8'
+          - task: SonarSource.sonarqube.6D01813A-9589-4B15-8491-8164AEB38055.SonarQubeAnalyze@4
+            displayName: 'Run Code Analysis'
+          - task: SonarSource.sonarqube.291ed61f-1ee4-45d3-b1b0-bf822d9095ef.SonarQubePublish@4
+            displayName: 'Publish Quality Gate Result'
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+            displayName: 'Yarn build:prod'
+            inputs:
+              Arguments: 'build:prod'
+              customRegistry: useFeed
+              customFeed: '86c6feb8-b7f2-48b9-9179-40fffa0db4c8'
+          - task: geeklearningio.gl-vsts-tasks-yarn.yarn-task.Yarn@2
+            displayName: 'Yarn build:server'
+            inputs:
+              Arguments: 'build:server'
+              customRegistry: useFeed
+              customFeed: '86c6feb8-b7f2-48b9-9179-40fffa0db4c8'
+          - task: Docker@2
+            displayName: 'Build And Push to ACR'
+            inputs:
+              containerRegistry: ${{ parameters.dockerRegistry }}
+              repository: ${{ parameters.dockerRepository }}
+              tags: |
+                $(Build.BuildNumber)
+                $(Build.SourceVersion)
+            continueOnError: true

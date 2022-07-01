@@ -1,0 +1,18 @@
+properties:
+- name: sonarProjectKey
+  type: string
+- name: sonarProjectName
+  type: string
+
+steps:
+- task: SonarQubePrepare@4
+  inputs:
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: '{{ properties.sonarProjectKey }}'
+    cliProjectName: '{{ properties.sonarProjectName }}'
+    cliSources: '.'
+- task: SonarQubeAnalyze@4
+- task: SonarQubePublish@4
+  inputs:
+    pollingTimeoutSec: '300'

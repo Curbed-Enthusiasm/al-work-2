@@ -1,0 +1,26 @@
+trigger:
+- main
+pool:
+  vmImageName: 'ubuntu-latest'
+steps:
+- task: InstallSSHKey@0
+  inputs:
+    knownHostsEntry: 'vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H'
+    sshKeySecureFile: 'azdevops_key'
+- task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+  displayName: 'Install Terraform 0.15.3'
+  inputs:
+    terraformVersion: 0.15.3
+- script: |
+    wget -O terragrunt -nv https://github.com/gruntwork-io/terragrunt/releases/download/v0.29.10/terragrunt_linux_amd64
+    chmod +x terragrunt
+  displayName: 'Install terragrunt  0.29.10'
+  workingDirectory: 'terragrunt'
+- script: |
+    ./terragrunt run-all plan 
+  workingDirectory: 'terragrunt'
+  env:
+    subscription_id: $(SUBSCRIPTION_ID)
+    client_id: $(CLIENT_ID)
+    tenant_id: $(TENANT_ID)
+    client_secret: $(CLIENT_SECRET)
