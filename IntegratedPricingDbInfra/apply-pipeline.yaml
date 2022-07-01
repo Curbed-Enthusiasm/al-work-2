@@ -1,0 +1,83 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - README.md
+    - .gitignore
+    - pull-request-pipeline.yml
+
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Accelerate/pipeline-templates
+    ref: 'refs/heads/dacpacArtifact'
+
+pool:
+  vmImage: "ubuntu-18.04"
+
+stages:
+        
+- stage: "dev"
+  jobs:
+  - template: terraform-apply-manual-approve.yaml@templates
+    parameters:
+      env: dev
+
+- stage: "dev_DACPACtion"
+  dependsOn: 'dev'
+  variables:
+  - template: vars/vars-dev.yaml
+  jobs:
+  - template: sql-dacpac.yaml@templates
+    parameters:
+      environmentName: 'dev'
+      dbProject: 'Accelerate'
+      dbServer: 'alsqldb01.database.windows.net'
+      dbName: 'al-TestAutomation-dev'
+    
+# - stage: "test"
+#   variables:
+#   - template: vars/vars-test.yaml
+#   jobs:
+#   - template: terraform-apply-manual-approve.yaml@templates
+#     parameters:
+#       env: test
+#   - template: sql-dacpac.yaml@templates
+#     # parameters:
+#     #   environmentName: ${{ variables.environmentName }}
+#     #   dbProject: ${{ variables.dbProject }}
+#     #   dbServer: ${{ variables.dbServer }}
+#     #   dbName: ${{ variables.dbName }}
+
+# - stage: "stg"
+#   variables:
+#   - template: vars/vars-stg.yaml
+#   jobs:
+#   - template: terraform-apply-manual-approve.yaml@templates
+#     parameters:
+#       env: stg
+#   - template: sql-dacpac.yaml@templates
+#     # parameters:
+#     #   environmentName: ${{ variables.environmentName }}
+#     #   dbProject: ${{ variables.dbProject }}
+#     #   dbServer: ${{ variables.dbServer }}
+#     #   dbName: ${{ variables.dbName }}
+
+
+# - stage: "prod"
+#   variables:
+#   - template: vars/vars-prod.yaml
+#   jobs:
+#   - job: validate
+#   - job: plan
+#   - job: apply
+#   - template: sql-dacpac.yaml@templates
+#     # parameters:
+#     #   environmentName: ${{ variables.environmentName }}
+#     #   dbProject: ${{ variables.dbProject }}
+#     #   dbServer: ${{ variables.dbServer }}
+#     #   dbName: ${{ variables.dbName }}

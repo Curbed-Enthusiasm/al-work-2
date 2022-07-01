@@ -1,0 +1,45 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/devsAutomatedDb.sqlproj": {}
+  },
+  "projects": {
+    "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/devsAutomatedDb.sqlproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/devsAutomatedDb.sqlproj",
+        "projectName": "devsAutomatedDb",
+        "projectPath": "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/devsAutomatedDb.sqlproj",
+        "packagesPath": "/Users/mmoeller/.nuget/packages/",
+        "outputPath": "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "/Users/mmoeller/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net46"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net46": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net46": {
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            }
+          }
+        }
+      }
+    }
+  }
+}

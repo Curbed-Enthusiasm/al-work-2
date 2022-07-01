@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "xwzbIdchwlNcSrYtpZ5Cel5j4NyAG+cLJuW5JLtWPvUZaLsD1TSu6A8P7mP4T/6CcXz+5kPdxErwZt33Ml63Aw==",
+  "success": true,
+  "projectFilePath": "/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/dbAutomation/dbAutomation.sqlproj",
+  "expectedPackageFiles": [
+    "/Users/mmoeller/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.0/microsoft.netframework.referenceassemblies.1.0.0.nupkg.sha512",
+    "/Users/mmoeller/.nuget/packages/microsoft.netframework.referenceassemblies.net46/1.0.0/microsoft.netframework.referenceassemblies.net46.1.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

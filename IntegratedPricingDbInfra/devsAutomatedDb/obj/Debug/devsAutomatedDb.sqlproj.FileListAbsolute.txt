@@ -1,0 +1,9 @@
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/bin/Debug/devsAutomatedDb.dacpac
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/bin/Debug/devsAutomatedDb.dll
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/bin/Debug/devsAutomatedDb.pdb
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/Model.xml
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/refactor.xml
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/postdeploy.sql
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/predeploy.sql
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/devsAutomatedDb.dll
+/Users/mmoeller/Documents/GitGud/IntegratedPricingDbInfra/devsAutomatedDb/obj/Debug/devsAutomatedDb.pdb

@@ -1,0 +1,55 @@
+trigger:
+  branches:
+    include:
+    - main
+
+resources:
+- repo: self
+pool:
+  vmImage: $(vmImageName)
+
+variables:
+- group: truck-match-dev
+  # Azure Resource Manager connection created during pipeline creation
+- name: devSubscription 
+  value: 'data-science-dev' # move to various libraries eventually
+  # VM Image to use
+- name: vmImageName
+  value: 'ubuntu-latest'
+
+stages:
+
+# separate out via conditional to check for file changes to kick off TF section vs Function section
+- stage: TfDeploy
+  jobs:
+
+  - job: tfBuild
+    displayName: runTF
+    pool:
+      vmImage: $(vmImageName)
+# fixed the following step by: creating ssh key, adding that key to both the library and my keys which have access to the right repos (this will need to be fixed at some point), and by adding the pub key section
+    steps:
+    - task: InstallSSHKey@0
+      inputs:
+        knownHostsEntry: 'vs-ssh.visualstudio.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7Hr1oTWqNqOlzGJOfGJ4NakVyIzf1rXYd4d7wo6jBlkLvCA4odBlL0mDUyZ0/QUfTTqeu+tm22gOsv+VrVTMk6vwRU75gY/y9ut5Mb3bR5BV58dKXyq9A9UeB5Cakehn5Zgm6x1mKoVyf+FFn26iYqXJRgzIZZcZ5V6hrE0Qg39kZm4az48o0AUbf6Sp4SLdvnuMa2sVNwHBboS7EJkm57XQPVU3/QpyNLHbWDdzwtrlS+ez30S3AdYhLKEOxAG8weOnyrtLJAUen9mTkol8oII1edf7mWWbWVf0nBmly21+nZcmCTISQBtdcyPaEno7fFQMDD26/s0lfKob4Kw8H'
+        sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC087b1MZJAioTd0C9Feti5r7J5FAps0YV8rO7cGg0EdUzrWnRfO46b8B6D8X+P6WxKAi0oxIGgp1Ygo2la97ZdhN/tFAbg1XWznYwK5FYvmLh9JFZFSimKoDaOfcyLe6JAgSPFA12tJsIcMletVpDI5JHFLsTm1C6UPcAsCMNLsDPE+RjwqKWB9JxFxaE4Up3hd0GFaA18VJrH0dsPQ9X+6H/3BfXYmHGcs8c+W5o/8uQRhgyn+4f/52fESIN7RCNAlOMz7H/NUcR0bMLl0drPCY0eGYet/+HCxYgBHKq7pVwwCNNsWQZ9Sqe6AhBrBH4HMW4IdqQlToo/DpnI+n2IZ3iB4HGCz+vQPsatTZuwCVoyU52m+Lp+8I2e+SpWqzWItjKfJs9MKVz2zBKLiriGQFKM8tAYfCpMNZYScGQvq2qZuZZhBSP1wlhxB+9FcCX31mIVyywSaX662ou2lu7CYKmcnxuu7HeJFArIUzVNpIpoEkPnkHsZO7owcQBoV+YungQKWQrOThcssqblStIA9A3Nn9tgP4hGmB9HR6mszE1nz+wQ46gXp4rviJMITBw+cDM/O5V9aqJM6zELcbttCx4RLHrlBWIwwNY7wVSzhZm0Be9uWj5w2ltkTtY5SUOXp0HgU2dazgbH3+aXvQIPvEQgQX1r6A5ZV86u2JYKuw=='
+        sshKeySecureFile: 'az_key'
+    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+      displayName: 'Install Terraform 0.15.3'
+      inputs:
+        terraformVersion: 0.15.3
+    - script: |
+        pwd && ls
+        wget -O terragrunt -nv https://github.com/gruntwork-io/terragrunt/releases/download/v0.29.10/terragrunt_linux_amd64
+        chmod +x terragrunt
+      displayName: 'Install terragrunt  0.29.10'
+      workingDirectory: 'terragrunt'
+    - script: |
+        ./terragrunt run-all validate --terragrunt-non-interactive
+        ./terragrunt run-all apply --terragrunt-non-interactive
+      workingDirectory: 'terragrunt'
+      env:
+        SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+        CLIENT_ID: $(CLIENT_ID)
+        TENANT_ID: $(TENANT_ID)
+        CLIENT_SECRET: $(CLIENT_SECRET)
