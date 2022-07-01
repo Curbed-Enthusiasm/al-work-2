@@ -1,0 +1,45 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- develop
+
+resources:
+- repo: self
+
+pool:
+  vmImage: 'windows-2019'
+
+steps:
+- task: MSBuild@1
+  displayName: 'Build Database Project'
+  inputs:
+    solution: '**\*.*proj'
+    configuration: 'release'
+    clean: true
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.BuildDirectory)\s\dbAutomation\bin\Release'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)\stgProdDb'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)\stgProdDb'
+    ArtifactName: 'stgProdDbPackage'
+    publishLocation: 'Container'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.BuildDirectory)\s\devsAutomatedDb\bin\Release'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)\devsDb'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)\devsDb'
+    ArtifactName: 'devsDbPackage'
+    publishLocation: 'Container'
