@@ -1,0 +1,53 @@
+{
+    "name": "al-lcp-01",
+    "type": "Microsoft.Storage/storageAccounts/managementPolicies",
+    "apiVersion": "2021-01-01",
+    "properties": {
+      "policy": {
+        "rules": [
+          {
+            "enabled": true,
+            "name": "AL-storage-lifecycle",
+            "type": "Lifecycle",
+            "definition": {
+              "actions": {
+                "baseBlob": {
+                  "tierToCool": {
+                    "daysAfterLastAccessTimeGreaterThan": 30
+                  },
+                  "tierToArchive": {
+                    "daysAfterLastAccessTimeGreaterThan": 90
+                  },
+                  "enableAutoTierToHotFromCool": true
+                },
+                "snapshot": {
+                  "tierToCool": {
+                    "daysAfterCreationGreaterThan": 30
+                  },
+                  "tierToArchive": {
+                    "daysAfterCreationGreaterThan": 90
+                  }
+                },
+                "version": {
+                  "tierToCool": {
+                    "daysAfterCreationGreaterThan": 30
+                  },
+                  "tierToArchive": {
+                    "daysAfterCreationGreaterThan": 90
+                  }
+                }
+              },
+              "filters": {
+                "prefixMatch": [
+                  "accelerate/*"
+                ],
+                "blobTypes": [
+                  "blockBlob"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }

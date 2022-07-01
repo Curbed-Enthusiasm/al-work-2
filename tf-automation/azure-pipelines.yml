@@ -1,0 +1,73 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  # start with setting up python version 3
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    architecture: 'x64'
+
+# Install or upgrade pip
+- script: python -m pip install --upgrade pip
+  displayName: 'Upgrade pip'
+
+# Install the azure-cli package needed
+- script: pip install --pre azure-cli --extra-index-url https://azurecliprod.blob.core.windows.net/edge
+  displayName: 'upgrade azure cli'
+
+
+# - task: CopyFiles@2
+#   displayName: 'Copy Terraform files to artifacts'
+#   inputs:
+#     SourceFolder: terraform/db
+#     TargetFolder: '$(build.artifactstagingdirectory)/Terraform'
+
+# - task: PublishBuildArtifacts@1
+#   displayName: 'Publish Artifact'
+#   inputs:
+#     PathtoPublish: '$(build.artifactstagingdirectory)'
+
+# Add the devops extension
+- script: az extension add -n azure-devops
+  displayName: 'Install Azure DevOps Extension'
+
+- bash: echo ${AZURE_DEVOPS_CLI_PAT} | az devops login
+  env:
+    AZURE_DEVOPS_CLI_PAT: $(MATTS-PAT)
+  displayName: 'Login Azure DevOps Extension'
+
+- script: az repos create --name $(project-name) --organization https://arrivelogistics.visualstudio.com/ --project "Accelerate"
+  displayName: create repository
+
+- script: |
+    git clone -q https://$(MATTS-PAT)@arrivelogistics.visualstudio.com/Accelerate/_git/platform-eng-template
+    cd platform-eng-template
+    git config --global user.email "mmoeller@arrivelogistics.com"
+    git config --global user.name "mmoeller"
+    git commit -am "Copied from platform-eng-template"
+    git remote rename origin template
+    git remote add origin https://$(MATTS-PAT)@arrivelogistics.visualstudio.com/Accelerate/_git/$(project-name)
+    git push -u origin --all
+  displayName: 'clone into new repo from platform-eng-template'
+
+- script: |
+    az pipelines create --name $(project-name) --description 'Build Pipeline' --repository $(project-name) --branch main --yml-path release-pipeline.yml --repository-type tfsgit
+    az pipelines variable create --name SUBSCRIPTION_ID --allow-override true --org https://arrivelogistics.visualstudio.com/ --pipeline-name $(project-name) --project Accelerate --secret true
+    az pipelines variable create --name TENANT_ID --allow-override true --org https://arrivelogistics.visualstudio.com/ --pipeline-name $(project-name) --project Accelerate --secret true
+    az pipelines variable create --name CLIENT_ID --allow-override true --org https://arrivelogistics.visualstudio.com/ --pipeline-name $(project-name) --project Accelerate --secret true
+    az pipelines variable create --name CLIENT_SECRET --allow-override true --org https://arrivelogistics.visualstudio.com/ --pipeline-name $(project-name) --project Accelerate --secret true
+  displayName: create build/release pipeline
+  env:
+    AZURE_DEVOPS_EXT_PIPELINE_VAR_SUBSCRIPTION_ID: $(AZURE_DEVOPS_EXT_PIPELINE_VAR_SUBSCRIPTION_ID)
+    AZURE_DEVOPS_EXT_PIPELINE_VAR_TENANT_ID: $(AZURE_DEVOPS_EXT_PIPELINE_VAR_TENANT_ID)
+    AZURE_DEVOPS_EXT_PIPELINE_VAR_CLIENT_ID: $(AZURE_DEVOPS_EXT_PIPELINE_VAR_CLIENT_ID)
+    AZURE_DEVOPS_EXT_PIPELINE_VAR_CLIENT_SECRET: $(AZURE_DEVOPS_EXT_PIPELINE_VAR_CLIENT_SECRET)

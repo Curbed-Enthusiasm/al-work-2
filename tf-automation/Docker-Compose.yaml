@@ -1,0 +1,15 @@
+version: "3.5"
+services:
+  job:
+    build: .
+    container_name: cli
+    environment:
+        # define the home folder; credentials will be read from $HOME/.aws
+      HOME: "/home"
+      AZURE_EXTENSION_DIR: "/opt/azcliextensions"
+      FLASK_APP: "tfportal.py"
+    env_file:
+      - variables.env
+    volumes:
+      - /python-auto
+      - ~/.aws/:/home/.aws/

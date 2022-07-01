@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block content %}
+
+    <h1> Available Terraform Modules</h1>
+    <!-- <form action="" method="post" novalidate id="modForm">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.modulesDD.label }}<br>
+            {{ form.modulesDD}}
+            {% for error in form.modulesDD.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p> {{ form.submit() }}</p>
+    </form> -->
+
+    <div class="row">
+      <div class="col-md-4">
+          {{ wtf.quick_form(form) }}
+      </div>
+    </div>
+
+    <div id="modSelected"></div>
+    <pre id="modDisplay"></pre>
+    <script>
+        let mod_select = document.getElementById('modulesDD');
+
+        mod_select.onchange = function(){
+            tf_mod = mod_select.value;
+            document.getElementById("modSelected").innerHTML = "You selected: " + tf_mod;
+            //if (tf_mod === "as") {
+            fetch('/modulelist/' + tf_mod).then(function(response){
+              response.json().then(function(data){
+                let preHTML = ''
+                for (let mod of data.tfmod){
+                  preHTML += '<h4>' + mod.module + '</h4>'
+                }
+                document.getElementById("modDisplay").innerHTML = preHTML;
+              });
+
+            });
+                //document.getElementById("modDisplay").innerHTML = preHTML;
+            //}
+        }
+        //function myFunction() {
+          //var x = document.getElementById("modulesDD").value;
+         //document.getElementById("modDisplay").innerHTML = "You selected: " + x;
+        //}
+        </script>
+{% endblock %}
