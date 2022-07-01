@@ -1,0 +1,20 @@
+module "al-function-mod" {
+  source = "git::ssh://git@vs-ssh.visualstudio.com/v3/ArriveLogistics/Accelerate/terraform-modules//function-module?ref=azFunctionMod"
+  resource_group_name = "rg-matching-algorithm"
+  resource_group_is_new = true
+  region = "southcentralus"
+  storage_acct_name = "almatchalgosa"
+  storage_acct_is_new = true
+  env = "dev"
+  purpose_tag = "test-matching-algo"
+  owner_tag = "DEDODS"
+  function_name = "truck-matching-algorithm-Dev"
+  os_type = "linux"
+  service_plan_name = "match-algo-asp"
+  service_plan_is_new = true
+  service_plan_tier = "Standard"
+  service_plan_size = "P2v2"
+  service_plan_kind = "Linux"
+  service_plan_reserved = true
+  func_runtime_lang = "python"
+}

@@ -1,0 +1,18 @@
+# DO NOT include azure-functions-worker in this file
+# The Python Worker is managed by Azure Functions platform
+# Manually managing azure-functions-worker may cause unexpected issues
+
+azure-functions
+pandas==1.2.4
+scipy
+azure-storage-blob
+scikit-learn
+numpy==1.20.1
+numba==0.53.1
+simplejson
+pyodbc==4.0.30
+markupsafe==1.1.1
+jinja2==2.11.3
+xgboost==1.5.2
+eli5
+azure.servicebus

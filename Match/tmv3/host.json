@@ -1,0 +1,33 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "eventHubs": {
+    "batchCheckpointFrequency": 5,
+    "eventProcessorOptions": {
+        "maxBatchSize": 100,
+        "prefetchCount": 150
+    },
+    "initialOffsetOptions": {
+        "type": "fromStart",
+        "enqueuedTimeUtc": ""
+    }
+},
+"serviceBus": {
+  "prefetchCount": 10,
+  "messageHandlerOptions": {
+          "maxConcurrentCalls": 5,
+          "maxAutoRenewDuration": "00:55:00"
+  }
+},
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[2.*, 3.0.0)"
+  }
+}
